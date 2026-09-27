@@ -1,0 +1,39 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('peminjaman_ruangs', function (Blueprint $table) {
+            $table->id();
+            $table->string('nama_ruangan');
+            
+            // Relasi Foreign Key ke 3 tabel lainnya
+            $table->foreignId('mahasiswa_id')->constrained('mahasiswas')->onDelete('cascade');
+            $table->foreignId('dosen_id')->constrained('dosens')->onDelete('cascade');
+            $table->foreignId('matakuliah_id')->constrained('matakuliahs')->onDelete('cascade');
+            
+            $table->date('tanggal_pinjam');
+            $table->time('jam_mulai');
+            $table->time('jam_selesai');
+            $table->text('tujuan_kegiatan');
+            $table->string('status')->default('Menunggu'); // Menunggu / Disetujui / Selesai / Dibatalkan
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('peminjaman_ruangs');
+    }
+};
