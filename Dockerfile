@@ -1,45 +1,39 @@
 FROM php:8.2-cli
 
-# Install system dependencies & SQLite
+# Install dependencies dan ekstensi SQLite
 RUN apt-get update && apt-get install -y \
     git \
-    curl \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
     unzip \
-    sqlite3 \
     libsqlite3-dev \
+    sqlite3 \
     nodejs \
-    npm
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite mbstring bcmath
+RUN docker-php-ext-install pdo pdo_sqlite
 
-# Get Composer
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
-WORKDIR /var/www
+WORKDIR /app
 
-# Copy project files
+# Copy seluruh file project
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Install NPM dependencies & build assets (Tailwind)
+# Install dependency PHP & build asset front-end
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install && npm run build
 
-# Setup SQLite database file
-RUN mkdir -p database && touch database/database.sqlite
+# Buat file database SQLite jika belum ada dan atur permission penuh
+RUN mkdir -p database storage bootstrap/cache \
+    && touch database/database.sqlite \
+    && chmod -R 777 storage bootstrap/cache database
 
-# Expose port
 EXPOSE 8080
 
-# Fix storage & database permissions
-RUN chmod -R 777 storage bootstrap/cache database
-
-# Run migrations & start server
-CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+# Jalankan migrasi dan nyalakan server
+CMD touch database/database.sqlite \
+    && chmod -R 777 storage bootstrap/cache database \
+    && php artisan config:clear \
+    && php artisan migrate --force \
+    && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
