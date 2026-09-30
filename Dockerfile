@@ -38,5 +38,8 @@ RUN mkdir -p database && touch database/database.sqlite
 # Expose port
 EXPOSE 8080
 
+# Fix storage & database permissions
+RUN chmod -R 777 storage bootstrap/cache database
+
 # Run migrations & start server
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
+CMD php artisan config:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
